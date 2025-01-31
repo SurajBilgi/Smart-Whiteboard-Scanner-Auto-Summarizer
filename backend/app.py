@@ -24,6 +24,9 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Dictionary to store chat history per image
 chat_histories = {}
 
+# Boundaries for OpenAI formatting rules
+boundaries = " Never use math equations within headings, lists, or bullets - only paragraphs or new blocks. If the image contains an equation, first show the equation in block math, then describe it in words. Generally prefer block math blocks for equations, but inline is OK within paragraphs. "
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -34,7 +37,7 @@ def encode_image(image_path):
 
 def get_image_explanation(image_data):
     """Sends the image to OpenAI and gets an explanation."""
-    prompt = "Describe in detail what the professor is teaching in this image. Provide an in-depth explanation."
+    prompt = "Describe at a high level what the professor has drawn in the image." + boundaries + "Prompt the user if they would like more detail. Try to be brief, but also clear"
 
     openai_api_url = "https://api.openai.com/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
@@ -107,12 +110,16 @@ def chat_with_openai(image_id, user_message):
     if image_id not in chat_histories:
         return {"error": "No chat history found for this image."}
 
+    prompt = " When responding, keep these formatting rules in mind:" + boundaries
+
+    message = user_message + prompt
+
     # Append user message to history
-    chat_histories[image_id].append({"role": "user", "content": user_message})
+    chat_histories[image_id].append({"role": "user", "content": message})
 
     openai_api_url = "https://api.openai.com/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
-    payload = {"model": "gpt-4o", "messages": chat_histories[image_id], "max_tokens": 500}
+    payload = {"model": "gpt-4o", "messages": chat_histories[image_id], "max_tokens": 1000}
 
     try:
         response = requests.post(openai_api_url, headers=headers, json=payload, timeout=300)
@@ -131,8 +138,26 @@ def chat_with_openai(image_id, user_message):
         return {"response": assistant_message}  # ✅ Returning plain text response
 
     except requests.exceptions.RequestException as e:
+        error_details = {}
+        
+        # Check if response exists in the exception for more context
+        if hasattr(e, 'response') and e.response is not None:
+            error_details = {
+                "status_code": e.response.status_code,
+                "response_text": e.response.text
+            }
+
+            # Log the full error response for debugging
+            logging.error(f"Error response: {error_details}")
+        
         logging.error(f"Error calling OpenAI: {e}")
-        return {"error": str(e)}
+
+        # Return error and full details for debugging
+        return {
+            "error": str(e),
+            "details": error_details
+        }
+
 
 @app.route('/chat', methods=['POST'])
 def chat():
