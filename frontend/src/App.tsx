@@ -53,8 +53,7 @@ function App() {
     }
 
     setIsAnalyzing(true);
-    await new Promise((resolve) => setTimeout(resolve, 10000));
-    const result = await uploadImage(preview);
+    const result = await uploadImageBase64(preview);
     console.log("[] result", result);
     setIsAnalyzing(false);
 
