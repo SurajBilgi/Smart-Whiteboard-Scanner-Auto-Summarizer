@@ -4,6 +4,7 @@ import { FileUpload } from "./components/FileUpload";
 import { Chat, Message } from "./components/Chat";
 import { Sidebar } from "./components/Sidebar";
 import { PanelsTopLeft } from "lucide-react";
+import { uploadImage } from "./uploadImage";
 
 interface ChatSession {
   id: string;
@@ -22,6 +23,8 @@ function App() {
   currentChadIdRef.current = currentChatId;
 
   const currentChat = chats.find((chat) => chat.id === currentChatId);
+
+  console.log("[] preview", currentChat?.preview);
 
   const handleNewChat = () => {
     const newChat: ChatSession = {
@@ -51,6 +54,8 @@ function App() {
 
     setIsAnalyzing(true);
     await new Promise((resolve) => setTimeout(resolve, 10000));
+    const result = await uploadImage(preview);
+    console.log("[] result", result);
     setIsAnalyzing(false);
 
     setChats((prev) =>
