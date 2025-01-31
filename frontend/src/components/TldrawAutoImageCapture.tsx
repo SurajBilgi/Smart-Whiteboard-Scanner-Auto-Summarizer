@@ -32,10 +32,11 @@ export const TldrawAutoImageCapture = ({
 
   useEffect(() => {
     let inProgress = false;
+    let debounceTimeout: number;
 
-    const runCaptureAndUpload = async () => {
-      console.log("[] Running auto image capture");
+    const isReadyToCapture = () => {
       const shapeIds = editor.getCurrentPageShapeIds();
+
       console.debug("[]", {
         inProgress,
         shapeIds,
@@ -54,10 +55,16 @@ export const TldrawAutoImageCapture = ({
         )
       ) {
         console.log("[] Skipping auto image capture");
-        return;
+        return false;
       }
 
       lastShapeIds.current = shapeIds;
+      return true;
+    };
+
+    const runCaptureAndUpload = async () => {
+      console.log("[] Running auto image capture");
+      const shapeIds = lastShapeIds.current;
       console.log("[] Exporting to Blob");
       let blob;
       try {
@@ -103,13 +110,24 @@ export const TldrawAutoImageCapture = ({
       }
       inProgress = false;
     };
+
+    // always upload on load so that we don't wait 5 seconds to start analyzing
     runCaptureAndUpload();
-    const timer = setInterval(() => {
-      runCaptureAndUpload();
-    }, interval);
+    const intervalTimer = setInterval(() => {
+      if (!isReadyToCapture()) return;
+      if (debounceTimeout) {
+        console.log("[] user still drawing, clearing debounce timeout");
+        clearTimeout(debounceTimeout);
+      }
+      debounceTimeout = setTimeout(() => {
+        console.log("[] Running debounce timeout");
+        runCaptureAndUpload();
+      }, 5000);
+    }, 1000);
 
     return () => {
-      clearInterval(timer);
+      clearInterval(intervalTimer);
+      if (debounceTimeout) clearTimeout(debounceTimeout);
     };
   }, [editor]);
 
