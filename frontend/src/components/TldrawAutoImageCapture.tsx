@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { exportToBlob, useEditor } from "tldraw";
 import { uploadImageBlob } from "../uploadImage";
 import { Message } from "./Chat";
+import { ChatSession } from "../pages/StudentApp";
+import { blobToBase64 } from "../utils/blobToBase64";
 
 const isEqualArrays = (arr1: Array<any>, arr2: Array<any>) => {
   if (arr1.length !== arr2.length) {
@@ -12,10 +14,18 @@ const isEqualArrays = (arr1: Array<any>, arr2: Array<any>) => {
 
 export const TldrawAutoImageCapture = ({
   interval = 10000,
-  setMessages,
+  chats,
+  setCurrentChatId,
+  setChats,
+  currentChatIdRef,
+  onCapture,
 }: {
   interval?: number;
-  setMessages: (messages: Message[]) => void;
+  chats: ChatSession[];
+  setCurrentChatId: React.Dispatch<React.SetStateAction<string | null>>;
+  setChats: React.Dispatch<React.SetStateAction<ChatSession[]>>;
+  currentChatIdRef: React.MutableRefObject<string | null>;
+  onCapture: (messages: Message[]) => void;
 }) => {
   const lastShapeIds = useRef<Set<string>>(new Set());
   const editor = useEditor();
@@ -26,7 +36,7 @@ export const TldrawAutoImageCapture = ({
     const runCaptureAndUpload = async () => {
       console.log("[] Running auto image capture");
       const shapeIds = editor.getCurrentPageShapeIds();
-      console.log("[]", {
+      console.debug("[]", {
         inProgress,
         shapeIds,
         refShapes: lastShapeIds.current,
@@ -43,6 +53,7 @@ export const TldrawAutoImageCapture = ({
           Array.from(lastShapeIds.current.values())
         )
       ) {
+        console.log("[] Skipping auto image capture");
         return;
       }
 
@@ -60,16 +71,33 @@ export const TldrawAutoImageCapture = ({
         console.log("[] Uploading and retrieving open AI response");
         const openAIResponse = await uploadImageBlob(blob);
         if (!openAIResponse) {
+          console.error("[] No open AI response");
           return;
         }
-        const assistantMessage: Message = {
-          id: Date.now(),
-          text: openAIResponse.explanation,
-          imageId: openAIResponse.image_id,
-          sender: "assistant",
-          timestamp: new Date(),
-        };
-        setMessages([assistantMessage]);
+
+        if (!currentChatIdRef.current) {
+          const preview = await blobToBase64(blob);
+          const newChat: ChatSession = {
+            id: Date.now().toString(),
+            name: `Chat ${chats.length + 1}`,
+            messages: [],
+            hasImage: true,
+            preview: preview,
+          };
+          setChats((prev) => [newChat, ...prev]);
+          setCurrentChatId(newChat.id);
+          currentChatIdRef.current = newChat.id;
+        }
+
+        onCapture([
+          {
+            id: Date.now(),
+            text: openAIResponse.explanation,
+            imageId: openAIResponse.image_id,
+            sender: "assistant",
+            timestamp: new Date(),
+          },
+        ]);
       } catch (ex) {
         console.error(ex);
       }

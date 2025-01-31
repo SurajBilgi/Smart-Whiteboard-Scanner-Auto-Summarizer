@@ -19,6 +19,10 @@
   }
 }
 
+.chat-user .prose {
+  color: white !important;
+}
+
 .prose {
   max-width: none;
 }

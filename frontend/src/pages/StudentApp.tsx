@@ -5,7 +5,7 @@ import { Chat, Message } from "../components/Chat";
 import { TldrawAutoImageCapture } from "../components/TldrawAutoImageCapture";
 import { Whiteboard } from "../components/Whiteboard";
 
-interface ChatSession {
+export interface ChatSession {
   id: string;
   name: string;
   messages: Message[];
@@ -18,13 +18,11 @@ export function StudentApp() {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const currentChadIdRef = React.useRef<string | null>(null);
+  const currentChatIdRef = React.useRef<string | null>(null);
 
-  currentChadIdRef.current = currentChatId;
+  currentChatIdRef.current = currentChatId;
 
   const currentChat = chats.find((chat) => chat.id === currentChatId);
-
-  console.log("[] preview", currentChat?.preview);
 
   const handleNewChat = () => {
     const newChat: ChatSession = {
@@ -40,10 +38,10 @@ export function StudentApp() {
   };
 
   const handleSetMessages = async (messages: Message[]) => {
-    if (!currentChadIdRef.current) return;
+    if (!currentChatIdRef.current) return;
     setChats((prev) =>
       prev.map((chat) =>
-        chat.id === currentChadIdRef.current
+        chat.id === currentChatIdRef.current
           ? {
               ...chat,
               messages: [...chat.messages, ...messages],
@@ -71,7 +69,7 @@ export function StudentApp() {
       const data = await response.json();
       setChats((prev) =>
         prev.map((chat) =>
-          chat.id === currentChadIdRef.current
+          chat.id === currentChatIdRef.current
             ? {
                 ...chat,
                 messages: [
@@ -90,31 +88,19 @@ export function StudentApp() {
     }
   };
 
-  console.log("[] isEnabled", Boolean(currentChat?.hasImage && !isAnalyzing));
-  console.log("[] currentChat", currentChat);
-
-  console.log("[] chats", chats);
+  console.debug("[] isEnabled", Boolean(currentChat?.hasImage && !isAnalyzing));
+  console.debug("[] currentChat", currentChat);
+  console.debug("[] chats", chats);
 
   return (
     <Grid style={{ height: "100dvh" }} columns="1fr 500px">
       <Whiteboard readOnly={true}>
         <TldrawAutoImageCapture
-          setMessages={(message) => {
-            if (!currentChatId) {
-              const newChat: ChatSession = {
-                id: Date.now().toString(),
-                name: `Chat ${chats.length + 1}`,
-                messages: [],
-                hasImage: false,
-                preview: null,
-              };
-              setChats((prev) => [...prev, newChat]);
-              setCurrentChatId(newChat.id);
-              currentChadIdRef.current = newChat.id;
-            }
-
-            handleSetMessages(message);
-          }}
+          chats={chats}
+          setChats={setChats}
+          setCurrentChatId={setCurrentChatId}
+          currentChatIdRef={currentChatIdRef}
+          onCapture={(messages) => handleSetMessages(messages)}
         />
       </Whiteboard>
       <Box style={{ height: "100dvh", overflow: "hidden" }}>

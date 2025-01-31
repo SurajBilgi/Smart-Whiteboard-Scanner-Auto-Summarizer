@@ -43,12 +43,6 @@ export function Chat({
 }: ChatProps) {
   const [inputValue, setInputValue] = useState("");
 
-  useEffect(() => {
-    if (window.MathJax) {
-      window.MathJax.typesetPromise?.();
-    }
-  }, [messages]);
-
   const handleSend = useCallback(() => {
     if (inputValue.trim() && isEnabled) {
       const newMessage: Message = {
@@ -103,13 +97,18 @@ export function Chat({
                   }}
                 >
                   <Box
+                    className={
+                      message.sender === "user" ? "chat-user" : "chat-assistant"
+                    }
                     style={{
                       backgroundColor:
                         message.sender === "user"
                           ? "var(--accent-9)"
                           : "var(--gray-3)",
                       color:
-                        message.sender === "user" ? "white" : "var(--gray-12)",
+                        message.sender === "user"
+                          ? "white !important"
+                          : "var(--gray-12)",
                       padding: "8px 12px",
                       borderRadius: "12px",
                       borderBottomRightRadius:
@@ -122,8 +121,8 @@ export function Chat({
                     {/* <div dangerouslySetInnerHTML={{ __html: message.text }} /> */}
                     <Text
                       size="1"
-                      color={message.sender === "user" ? "gray" : "gray"}
-                      style={{ opacity: 0.7 }}
+                      color={message.sender === "user" ? undefined : "gray"}
+                      style={{ opacity: 0.7, color: "white" }}
                     >
                       {message.timestamp.toLocaleTimeString()}
                     </Text>
