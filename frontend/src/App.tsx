@@ -26,7 +26,7 @@ function App() {
             style={{ height: "100%" }}
             gap="8"
           >
-            <Box style={{ textAlign: "center" }} mb="4">
+            <Box style={{ textAlign: "center" }} mb="4" pt="8">
               <Heading size="8" mb="2" style={{ color: "var(--accent-12)" }}>
                 Welcome
               </Heading>

@@ -4,7 +4,7 @@ import "katex/dist/katex.min.css";
 import { FileEdit } from "lucide-react";
 import TeX from "@matejmazur/react-katex";
 
-const defaultContent = `# Quadratic Functions
+const defaultContentBig = `# Quadratic Functions
 
 The equation shown is \\( y = ax^2 + b \\), which is a form of a quadratic function. This represents a parabola that opens upwards if \\( a > 0 \\) and downwards if \\( a < 0 \\).
 
@@ -22,7 +22,12 @@ The vertex form of a quadratic function is:
 
 where \\( (h, k) \\) is the vertex of the parabola.`;
 
+const defaultContent = `The professor has illustrated the famous equation \\( e = mc^2 \\). This equation, formulated by Albert Einstein, expresses the concept that energy (\\( e \\)) is equal to mass (\\( m \\)) times the speed of light squared (\\( c^2 \\)). It highlights the relationship between mass and energy, indicating that they are interchangeable.
+
+Would you like more details on this topic?`;
+
 function splitContent(content: string): string[] {
+  if (!content) return [];
   // Split by both inline and display math delimiters
   return content.split(/(\\\(.*?\\\)|\\\[.*?\\\])/gs).filter(Boolean);
 }
@@ -48,12 +53,12 @@ function renderContent(blocks: string[]) {
   const result: React.ReactNode[] = [];
   let key = 0;
 
-  const flushParagraph = () => {
+  const flushParagraph = (isLastBlock?: boolean) => {
     if (currentParagraph.length > 0) {
       result.push(
-        <span key={key++} className="inline">
+        <div key={key++} className={isLastBlock ? "" : "mb-4"}>
           {currentParagraph}
-        </span>
+        </div>
       );
       currentParagraph = [];
     }
@@ -130,7 +135,7 @@ function renderContent(blocks: string[]) {
     }
   });
 
-  flushParagraph();
+  flushParagraph(true);
   return result;
 }
 
@@ -170,7 +175,7 @@ export function MarkdownWithMath({ children }: { children: string }) {
           />
         </div>
       ) : (
-        <article className="prose prose-indigo max-w-none p-6">
+        <article className="prose prose-indigo max-w-none">
           {renderContent(blocks)}
         </article>
       )}
