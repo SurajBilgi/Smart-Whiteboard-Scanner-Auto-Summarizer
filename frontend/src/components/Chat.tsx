@@ -1,15 +1,13 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   Box,
   TextField,
   Button,
   Text,
-  Card,
   ScrollArea,
   Flex,
 } from "@radix-ui/themes";
-import { Send } from "lucide-react";
-// import Markdown from "react-markdown";
+import { Send, ArrowDown } from "lucide-react";
 import { MarkdownWithMath } from "./MarkdownWithMath";
 
 export interface Message {
@@ -18,12 +16,6 @@ export interface Message {
   sender: "user" | "assistant";
   timestamp: Date;
   imageId?: string;
-}
-
-declare global {
-  interface Window {
-    MathJax: any;
-  }
 }
 
 interface ChatProps {
@@ -42,6 +34,40 @@ export function Chat({
   setMessages,
 }: ChatProps) {
   const [inputValue, setInputValue] = useState("");
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => {
+      if (lastMessageRef.current) {
+        lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
+  }, []);
+
+  // const handleScroll = useCallback(() => {
+  //   if (!scrollViewportRef.current) return;
+
+  //   const { scrollHeight, scrollTop, clientHeight } = scrollViewportRef.current;
+  //   const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+  //   setShowScrollButton(!isNearBottom);
+  // }, []);
+
+  // useEffect(() => {
+  //   const viewport = scrollViewportRef.current;
+  //   if (viewport) {
+  //     viewport.addEventListener("scroll", handleScroll);
+  //     return () => viewport.removeEventListener("scroll", handleScroll);
+  //   }
+  // }, [handleScroll]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages]);
 
   const handleSend = useCallback(() => {
     if (inputValue.trim() && isEnabled) {
@@ -66,66 +92,99 @@ export function Chat({
 
   return (
     <Flex direction="column" height="100%">
-      <Box style={{ flexGrow: 1, overflow: "hidden" }} p="5">
+      <Box
+        style={{ flexGrow: 1, overflow: "hidden", position: "relative" }}
+        p="5"
+      >
         {(messages.length === 0 || isAnalyzing) && (
           <div className="flex items-center justify-center h-full p-8 text-gray-600 text-center transition-all duration-300 ease-in-out animate-fade-in">
-            <img />
             <p className="text-base animate-pulse">Analyzing whiteboard...</p>
           </div>
         )}
         {messages.length > 0 && (
-          <ScrollArea>
-            {imagePreview}
-            {messages.length > 0 && !isAnalyzing && (
-              <>
-                {messages.map((message) => (
-                  <Box
-                    key={message.id}
-                    mb="3"
-                    style={{
-                      display: "flex",
-                      justifyContent:
-                        message.sender === "user" ? "flex-end" : "flex-start",
-                    }}
-                  >
+          <ScrollArea ref={scrollAreaRef}>
+            <div ref={scrollViewportRef}>
+              {imagePreview}
+              {messages.length > 0 && !isAnalyzing && (
+                <>
+                  {messages.map((message, index) => (
                     <Box
-                      className={
-                        message.sender === "user"
-                          ? "chat-user"
-                          : "chat-assistant"
+                      key={message.id}
+                      mb="3"
+                      ref={
+                        index === messages.length - 1
+                          ? lastMessageRef
+                          : undefined
                       }
                       style={{
-                        backgroundColor:
-                          message.sender === "user"
-                            ? "var(--accent-9)"
-                            : "var(--gray-3)",
-                        color:
-                          message.sender === "user"
-                            ? "white !important"
-                            : "var(--gray-12)",
-                        padding: "8px 12px",
-                        borderRadius: "12px",
-                        borderBottomRightRadius:
-                          message.sender === "user" ? "4px" : "12px",
-                        borderBottomLeftRadius:
-                          message.sender === "assistant" ? "4px" : "12px",
+                        display: "flex",
+                        justifyContent:
+                          message.sender === "user" ? "flex-end" : "flex-start",
                       }}
                     >
-                      <MarkdownWithMath>{message.text}</MarkdownWithMath>
-                      {/* <div dangerouslySetInnerHTML={{ __html: message.text }} /> */}
-                      <Text
-                        size="1"
-                        color={message.sender === "user" ? undefined : "gray"}
-                        style={{ opacity: 0.7, color: "white" }}
+                      <Box
+                        className={
+                          message.sender === "user"
+                            ? "chat-user"
+                            : "chat-assistant"
+                        }
+                        style={{
+                          backgroundColor:
+                            message.sender === "user"
+                              ? "var(--accent-9)"
+                              : "var(--gray-3)",
+                          color:
+                            message.sender === "user"
+                              ? "white !important"
+                              : "var(--gray-12)",
+                          padding: "8px 12px",
+                          borderRadius: "12px",
+                          borderBottomRightRadius:
+                            message.sender === "user" ? "4px" : "12px",
+                          borderBottomLeftRadius:
+                            message.sender === "assistant" ? "4px" : "12px",
+                        }}
                       >
-                        {message.timestamp.toLocaleTimeString()}
-                      </Text>
+                        <MarkdownWithMath>{message.text}</MarkdownWithMath>
+                        <Text
+                          size="1"
+                          color={message.sender === "user" ? undefined : "gray"}
+                          style={{
+                            opacity: 0.7,
+                            color:
+                              message.sender === "user" ? "white" : undefined,
+                          }}
+                        >
+                          {message.timestamp.toLocaleTimeString()}
+                        </Text>
+                      </Box>
                     </Box>
-                  </Box>
-                ))}
-              </>
-            )}
+                  ))}
+                </>
+              )}
+            </div>
           </ScrollArea>
+        )}
+        {showScrollButton && (
+          <Button
+            onClick={scrollToBottom}
+            size="2"
+            variant="solid"
+            style={{
+              position: "absolute",
+              bottom: "20px",
+              right: "20px",
+              borderRadius: "full",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+              zIndex: 10,
+            }}
+          >
+            <ArrowDown size={16} />
+            New message
+          </Button>
         )}
       </Box>
 

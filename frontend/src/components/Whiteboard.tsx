@@ -12,6 +12,7 @@ export const Whiteboard = ({
   const store = useSyncDemo({ roomId: "openai-hackathon" });
   const whiteboard = (
     <Tldraw
+      hideUi={readOnly}
       store={store}
       onMount={(editor) => {
         editor.zoomToFit();
