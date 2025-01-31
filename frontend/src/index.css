@@ -50,3 +50,7 @@
   display: inline-flex;
   align-items: center;
 }
+
+.rt-ScrollAreaViewport {
+  scroll-behavior: smooth;
+}

@@ -34,35 +34,28 @@ export function Chat({
   setMessages,
 }: ChatProps) {
   const [inputValue, setInputValue] = useState("");
-  const [showScrollButton, setShowScrollButton] = useState(false);
   const [thinking, setThinking] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const scrollViewportRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const lastUserMessageRef = useRef<HTMLDivElement | null>(null);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
-      if (lastMessageRef.current) {
-        lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+      if (messages.at(-1)?.sender === "user") {
+        lastUserMessageRef.current = lastMessageRef.current;
       }
-    }, 100);
-  }, []);
 
-  // const handleScroll = useCallback(() => {
-  //   if (!scrollViewportRef.current) return;
+      const scrollContainer = scrollAreaRef.current;
+      if (!scrollContainer) return;
 
-  //   const { scrollHeight, scrollTop, clientHeight } = scrollViewportRef.current;
-  //   const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-  //   setShowScrollButton(!isNearBottom);
-  // }, []);
+      const newScrollTop =
+        messages.at(-1)?.sender === "user"
+          ? scrollContainer.scrollHeight
+          : lastUserMessageRef.current?.offsetTop ?? 0;
 
-  // useEffect(() => {
-  //   const viewport = scrollViewportRef.current;
-  //   if (viewport) {
-  //     viewport.addEventListener("scroll", handleScroll);
-  //     return () => viewport.removeEventListener("scroll", handleScroll);
-  //   }
-  // }, [handleScroll]);
+      scrollContainer.scrollTop = newScrollTop;
+    }, 10);
+  }, [messages]);
 
   useEffect(() => {
     if (messages.length > 0) {
