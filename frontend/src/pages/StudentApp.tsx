@@ -4,6 +4,7 @@ import "tldraw/tldraw.css";
 import { Chat, Message } from "../components/Chat";
 import { TldrawAutoImageCapture } from "../components/TldrawAutoImageCapture";
 import { Whiteboard } from "../components/Whiteboard";
+import { FileUpload } from "../components/FileUpload";
 
 export interface ChatSession {
   id: string;
@@ -105,6 +106,8 @@ export function StudentApp() {
       </Whiteboard>
       <Box style={{ height: "100dvh", overflow: "hidden" }}>
         <Chat
+          // for now, use FileUpload solely for preview
+          imagePreview={<FileUpload preview={currentChat?.preview} />}
           isEnabled={Boolean(currentChat?.messages.length)}
           isAnalyzing={isAnalyzing}
           messages={currentChat?.messages || []}

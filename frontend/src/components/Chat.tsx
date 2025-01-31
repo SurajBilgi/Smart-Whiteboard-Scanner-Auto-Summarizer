@@ -27,7 +27,7 @@ declare global {
 }
 
 interface ChatProps {
-  firstSlot?: React.ReactNode;
+  imagePreview?: React.ReactNode;
   isEnabled: boolean;
   isAnalyzing: boolean;
   messages: Message[];
@@ -35,7 +35,7 @@ interface ChatProps {
 }
 
 export function Chat({
-  firstSlot,
+  imagePreview,
   isEnabled,
   isAnalyzing,
   messages,
@@ -67,68 +67,63 @@ export function Chat({
   return (
     <Flex direction="column" height="100%">
       <Box style={{ flexGrow: 1, overflow: "hidden" }} p="5">
-        {messages.length === 0 && !isAnalyzing && (
+        {(messages.length === 0 || isAnalyzing) && (
           <div className="flex items-center justify-center h-full p-8 text-gray-600 text-center transition-all duration-300 ease-in-out animate-fade-in">
+            <img />
             <p className="text-base animate-pulse">Analyzing whiteboard...</p>
           </div>
         )}
         {messages.length > 0 && (
           <ScrollArea>
-            {firstSlot}
-            {messages.length === 0 && !isAnalyzing ? (
-              <Box
-                style={{
-                  textAlign: "center",
-                  color: "var(--gray-8)",
-                  padding: "2rem",
-                }}
-              >
-                <Text size="2">Analyzing whiteboard....</Text>
-              </Box>
-            ) : (
-              messages.map((message) => (
-                <Box
-                  key={message.id}
-                  mb="3"
-                  style={{
-                    display: "flex",
-                    justifyContent:
-                      message.sender === "user" ? "flex-end" : "flex-start",
-                  }}
-                >
+            {imagePreview}
+            {messages.length > 0 && !isAnalyzing && (
+              <>
+                {messages.map((message) => (
                   <Box
-                    className={
-                      message.sender === "user" ? "chat-user" : "chat-assistant"
-                    }
+                    key={message.id}
+                    mb="3"
                     style={{
-                      backgroundColor:
-                        message.sender === "user"
-                          ? "var(--accent-9)"
-                          : "var(--gray-3)",
-                      color:
-                        message.sender === "user"
-                          ? "white !important"
-                          : "var(--gray-12)",
-                      padding: "8px 12px",
-                      borderRadius: "12px",
-                      borderBottomRightRadius:
-                        message.sender === "user" ? "4px" : "12px",
-                      borderBottomLeftRadius:
-                        message.sender === "assistant" ? "4px" : "12px",
+                      display: "flex",
+                      justifyContent:
+                        message.sender === "user" ? "flex-end" : "flex-start",
                     }}
                   >
-                    <MarkdownWithMath>{message.text}</MarkdownWithMath>
-                    {/* <div dangerouslySetInnerHTML={{ __html: message.text }} /> */}
-                    <Text
-                      size="1"
-                      color={message.sender === "user" ? undefined : "gray"}
-                      style={{ opacity: 0.7, color: "white" }}
+                    <Box
+                      className={
+                        message.sender === "user"
+                          ? "chat-user"
+                          : "chat-assistant"
+                      }
+                      style={{
+                        backgroundColor:
+                          message.sender === "user"
+                            ? "var(--accent-9)"
+                            : "var(--gray-3)",
+                        color:
+                          message.sender === "user"
+                            ? "white !important"
+                            : "var(--gray-12)",
+                        padding: "8px 12px",
+                        borderRadius: "12px",
+                        borderBottomRightRadius:
+                          message.sender === "user" ? "4px" : "12px",
+                        borderBottomLeftRadius:
+                          message.sender === "assistant" ? "4px" : "12px",
+                      }}
                     >
-                      {message.timestamp.toLocaleTimeString()}
-                    </Text>
+                      <MarkdownWithMath>{message.text}</MarkdownWithMath>
+                      {/* <div dangerouslySetInnerHTML={{ __html: message.text }} /> */}
+                      <Text
+                        size="1"
+                        color={message.sender === "user" ? undefined : "gray"}
+                        style={{ opacity: 0.7, color: "white" }}
+                      >
+                        {message.timestamp.toLocaleTimeString()}
+                      </Text>
+                    </Box>
                   </Box>
-                </Box>
-              ))
+                ))}
+              </>
             )}
           </ScrollArea>
         )}

@@ -3,8 +3,8 @@ import { UploadCloud } from "lucide-react";
 import { Box, Text, Card, Flex } from "@radix-ui/themes";
 
 interface FileUploadProps {
-  onImageUpload: (preview: string) => void;
-  isAnalyzing: boolean;
+  onImageUpload?: (preview: string) => void;
+  isAnalyzing?: boolean;
   preview: string | null | undefined;
 }
 
@@ -37,7 +37,7 @@ export function FileUpload({
       if (file && file.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          onImageUpload(reader.result as string);
+          onImageUpload?.(reader.result as string);
         };
         reader.readAsDataURL(file);
       }
@@ -52,7 +52,7 @@ export function FileUpload({
         if (file.type.startsWith("image/")) {
           const reader = new FileReader();
           reader.onloadend = () => {
-            onImageUpload(reader.result as string);
+            onImageUpload?.(reader.result as string);
           };
           reader.readAsDataURL(file);
         }
