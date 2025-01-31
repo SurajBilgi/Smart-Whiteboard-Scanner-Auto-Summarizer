@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Box, Container, Heading, Text, Flex } from "@radix-ui/themes";
-import { GraduationCap, Users } from "lucide-react";
+import { GraduationCap, Heading2, Users } from "lucide-react";
 import { StudentApp } from "./pages/StudentApp";
 import { ProfessorApp } from "./pages/ProfessorApp";
 
@@ -27,8 +27,11 @@ function App() {
             gap="8"
           >
             <Box style={{ textAlign: "center" }} mb="4" pt="8">
-              <Heading size="8" mb="2" style={{ color: "var(--accent-12)" }}>
-                Welcome
+              <Heading size="8" mb="4" style={{ color: "var(--accent-12)" }}>
+                Welcome to Chalk GPT
+              </Heading>
+              <Heading size="6" mb="3">
+                Your AI-Powered Whiteboard Ally for Conquering Stevens
               </Heading>
               <Text size="4" color="gray">
                 Please select your role to continue

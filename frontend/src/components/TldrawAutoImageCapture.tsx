@@ -4,6 +4,7 @@ import { uploadImageBlob } from "../uploadImage";
 import { Message } from "./Chat";
 import { ChatSession } from "../pages/StudentApp";
 import { blobToBase64 } from "../utils/blobToBase64";
+import { debounce } from "../utils/debounce";
 
 const isEqualArrays = (arr1: Array<any>, arr2: Array<any>) => {
   if (arr1.length !== arr2.length) {
@@ -13,12 +14,12 @@ const isEqualArrays = (arr1: Array<any>, arr2: Array<any>) => {
 };
 
 export const TldrawAutoImageCapture = ({
-  interval = 10000,
   chats,
   setCurrentChatId,
   setChats,
   currentChatIdRef,
   onCapture,
+  setIsAnalyzing,
 }: {
   interval?: number;
   chats: ChatSession[];
@@ -26,6 +27,7 @@ export const TldrawAutoImageCapture = ({
   setChats: React.Dispatch<React.SetStateAction<ChatSession[]>>;
   currentChatIdRef: React.MutableRefObject<string | null>;
   onCapture: (messages: Message[]) => void;
+  setIsAnalyzing: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const lastShapeIds = useRef<Set<string>>(new Set());
   const editor = useEditor();
@@ -69,7 +71,9 @@ export const TldrawAutoImageCapture = ({
         });
         inProgress = true;
         console.log("[] Uploading and retrieving open AI response");
+        setIsAnalyzing(true);
         const openAIResponse = await uploadImageBlob(blob);
+        setIsAnalyzing(false);
         if (!openAIResponse) {
           console.error("[] No open AI response");
           return;
@@ -103,15 +107,20 @@ export const TldrawAutoImageCapture = ({
       }
       inProgress = false;
     };
-    runCaptureAndUpload();
-    const timer = setInterval(() => {
-      runCaptureAndUpload();
-    }, interval);
 
-    return () => {
-      clearInterval(timer);
+    const debouncedRunAndCaptureUpload = debounce(runCaptureAndUpload, 5000);
+
+    const handler = () => {
+      debouncedRunAndCaptureUpload();
     };
-  }, [editor]);
+
+    runCaptureAndUpload();
+    // add a window handler for a custom "whiteboard updated" event
+    window.addEventListener("whiteboardUpdated", handler);
+    return () => {
+      window.removeEventListener("whiteboardUpdated", handler);
+    };
+  }, []);
 
   return null;
 };

@@ -96,7 +96,7 @@ export function Chat({
         style={{ flexGrow: 1, overflow: "hidden", position: "relative" }}
         p="5"
       >
-        {(messages.length === 0 || isAnalyzing) && (
+        {messages.length === 0 && (
           <div className="flex items-center justify-center h-full p-8 text-gray-600 text-center transition-all duration-300 ease-in-out animate-fade-in">
             <p className="text-base animate-pulse">Analyzing whiteboard...</p>
           </div>
@@ -105,7 +105,7 @@ export function Chat({
           <ScrollArea ref={scrollAreaRef}>
             {/* <div ref={scrollViewportRef}> */}
             {imagePreview}
-            {messages.length > 0 && !isAnalyzing && (
+            {messages.length > 0 && (
               <>
                 {messages.map((message, index) => (
                   <Box
@@ -163,6 +163,13 @@ export function Chat({
             {thinking && (
               <div className="py-4 text-gray-600 transition-all duration-300 ease-in-out animate-fade-in">
                 <p className="text-base animate-pulse">Thinking...</p>
+              </div>
+            )}
+            {isAnalyzing && (
+              <div className="py-4 text-gray-600 transition-all duration-300 ease-in-out animate-fade-in">
+                <p className="text-base animate-pulse">
+                  Analyzing whiteboard updates...
+                </p>
               </div>
             )}
             {/* </div> */}

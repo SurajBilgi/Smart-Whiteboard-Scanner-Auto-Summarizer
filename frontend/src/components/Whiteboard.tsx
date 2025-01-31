@@ -16,6 +16,10 @@ export const Whiteboard = ({
       store={store}
       onMount={(editor) => {
         editor.zoomToFit();
+        editor.sideEffects.registerAfterChangeHandler("shape", () => {
+          // emit a custom whiteboard updated event on the window
+          window.dispatchEvent(new CustomEvent("whiteboardUpdated"));
+        });
       }}
     >
       {children}

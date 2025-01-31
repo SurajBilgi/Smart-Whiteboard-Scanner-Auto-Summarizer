@@ -102,6 +102,7 @@ export function StudentApp() {
           setCurrentChatId={setCurrentChatId}
           currentChatIdRef={currentChatIdRef}
           onCapture={(messages) => handleSetMessages(messages)}
+          setIsAnalyzing={setIsAnalyzing}
         />
       </Whiteboard>
       <Box style={{ height: "100dvh", overflow: "hidden" }}>
