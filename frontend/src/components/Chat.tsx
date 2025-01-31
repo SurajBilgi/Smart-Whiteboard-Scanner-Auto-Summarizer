@@ -28,7 +28,7 @@ interface ChatProps {
   isEnabled: boolean;
   isAnalyzing: boolean;
   messages: Message[];
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  setMessages: (messages: Message[]) => void;
 }
 
 export function Chat({
@@ -55,7 +55,7 @@ export function Chat({
         timestamp: new Date(),
       };
 
-      setMessages((prev) => [...prev, newMessage]);
+      setMessages([newMessage]);
       setInputValue("");
 
       setTimeout(() => {
@@ -72,7 +72,7 @@ export function Chat({
           sender: "assistant",
           timestamp: new Date(),
         };
-        setMessages((prev) => [...prev, assistantMessage]);
+        setMessages([assistantMessage]);
       }, 1000);
     }
   }, [inputValue, isEnabled]);

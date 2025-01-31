@@ -3,13 +3,17 @@ import { UploadCloud } from "lucide-react";
 import { Box, Text, Card, Flex } from "@radix-ui/themes";
 
 interface FileUploadProps {
-  onImageUpload: () => void;
+  onImageUpload: (preview: string) => void;
   isAnalyzing: boolean;
+  preview: string | null | undefined;
 }
 
-export function FileUpload({ onImageUpload, isAnalyzing }: FileUploadProps) {
+export function FileUpload({
+  onImageUpload,
+  isAnalyzing,
+  preview,
+}: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -33,8 +37,7 @@ export function FileUpload({ onImageUpload, isAnalyzing }: FileUploadProps) {
       if (file && file.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          setPreview(reader.result as string);
-          onImageUpload();
+          onImageUpload(reader.result as string);
         };
         reader.readAsDataURL(file);
       }
@@ -49,8 +52,7 @@ export function FileUpload({ onImageUpload, isAnalyzing }: FileUploadProps) {
         if (file.type.startsWith("image/")) {
           const reader = new FileReader();
           reader.onloadend = () => {
-            setPreview(reader.result as string);
-            onImageUpload();
+            onImageUpload(reader.result as string);
           };
           reader.readAsDataURL(file);
         }
