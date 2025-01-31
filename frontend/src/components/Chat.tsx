@@ -10,7 +10,7 @@ import {
 } from "@radix-ui/themes";
 import { Send } from "lucide-react";
 // import Markdown from "react-markdown";
-import { Markdown } from "./MarkdownWithMath";
+import { MarkdownWithMath } from "./MarkdownWithMath";
 
 export interface Message {
   id: number;
@@ -98,7 +98,6 @@ export function Chat({
               >
                 <Box
                   style={{
-                    maxWidth: "80%",
                     backgroundColor:
                       message.sender === "user"
                         ? "var(--accent-9)"
@@ -113,7 +112,7 @@ export function Chat({
                       message.sender === "assistant" ? "4px" : "12px",
                   }}
                 >
-                  <Markdown>{message.text}</Markdown>
+                  <MarkdownWithMath>{message.text}</MarkdownWithMath>
                   {/* <div dangerouslySetInnerHTML={{ __html: message.text }} /> */}
                   <Text
                     size="1"
