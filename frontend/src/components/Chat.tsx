@@ -9,12 +9,15 @@ import {
   Flex,
 } from "@radix-ui/themes";
 import { Send } from "lucide-react";
+// import Markdown from "react-markdown";
+import { Markdown } from "./MarkdownWithMath";
 
 export interface Message {
   id: number;
   text: string;
   sender: "user" | "assistant";
   timestamp: Date;
+  imageId?: string;
 }
 
 declare global {
@@ -24,7 +27,7 @@ declare global {
 }
 
 interface ChatProps {
-  firstSlot: React.ReactNode;
+  firstSlot?: React.ReactNode;
   isEnabled: boolean;
   isAnalyzing: boolean;
   messages: Message[];
@@ -57,23 +60,6 @@ export function Chat({
 
       setMessages([newMessage]);
       setInputValue("");
-
-      setTimeout(() => {
-        const equations = [
-          "Here's the quadratic formula: \\[x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\\]",
-          "Einstein's famous equation: \\[E = mc^2\\]",
-          "The Pythagorean theorem: \\[a^2 + b^2 = c^2\\]",
-          "A beautiful integral: \\[\\int_{0}^{\\infty} e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}\\]",
-        ];
-
-        const assistantMessage: Message = {
-          id: Date.now(),
-          text: equations[Math.floor(Math.random() * equations.length)],
-          sender: "assistant",
-          timestamp: new Date(),
-        };
-        setMessages([assistantMessage]);
-      }, 1000);
     }
   }, [inputValue, isEnabled]);
 
@@ -97,9 +83,7 @@ export function Chat({
                 padding: "2rem",
               }}
             >
-              <Text size="2">
-                Upload an image for analysis & to start asking questions....
-              </Text>
+              <Text size="2">Analyzing whiteboard....</Text>
             </Box>
           ) : (
             messages.map((message) => (
@@ -129,7 +113,8 @@ export function Chat({
                       message.sender === "assistant" ? "4px" : "12px",
                   }}
                 >
-                  <div dangerouslySetInnerHTML={{ __html: message.text }} />
+                  <Markdown>{message.text}</Markdown>
+                  {/* <div dangerouslySetInnerHTML={{ __html: message.text }} /> */}
                   <Text
                     size="1"
                     color={message.sender === "user" ? "gray" : "gray"}
