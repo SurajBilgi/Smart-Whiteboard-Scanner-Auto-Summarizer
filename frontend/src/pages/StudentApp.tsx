@@ -97,7 +97,7 @@ export function StudentApp() {
 
   return (
     <Grid style={{ height: "100dvh" }} columns="1fr 500px">
-      <Whiteboard>
+      <Whiteboard readOnly={true}>
         <TldrawAutoImageCapture
           setMessages={(message) => {
             if (!currentChatId) {

@@ -2,9 +2,15 @@ import "tldraw/tldraw.css";
 import { useSyncDemo } from "@tldraw/sync";
 import { Tldraw } from "tldraw";
 
-export const Whiteboard = ({ children }: { children?: React.ReactNode }) => {
+export const Whiteboard = ({
+  children,
+  readOnly,
+}: {
+  children?: React.ReactNode;
+  readOnly?: boolean;
+}) => {
   const store = useSyncDemo({ roomId: "openai-hackathon" });
-  return (
+  const whiteboard = (
     <Tldraw
       store={store}
       onMount={(editor) => {
@@ -13,5 +19,26 @@ export const Whiteboard = ({ children }: { children?: React.ReactNode }) => {
     >
       {children}
     </Tldraw>
+  );
+
+  if (!readOnly) {
+    return whiteboard;
+  }
+
+  // if readonly, wrap in a div with position relative and overlay a transparent div
+  return (
+    <div style={{ position: "relative" }}>
+      {whiteboard}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          opacity: 0,
+        }}
+      />
+    </div>
   );
 };
