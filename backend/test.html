@@ -1,0 +1,41 @@
+<video id="video" autoplay></video>
+<button id="capture">Capture</button>
+<canvas id="canvas" style="display:none;"></canvas>
+
+<script>
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const captureButton = document.getElementById("capture");
+
+// Access webcam
+navigator.mediaDevices.getUserMedia({ video: true })
+    .then((stream) => {
+        video.srcObject = stream;
+    })
+    .catch((err) => {
+        console.error("Error accessing webcam:", err);
+    });
+
+// Capture image from video
+captureButton.addEventListener("click", () => {
+    const context = canvas.getContext("2d");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Convert canvas to Blob
+    canvas.toBlob((blob) => {
+        let formData = new FormData();
+        formData.append("image", blob, "captured_image.jpg");
+
+        // Send image to Flask backend
+        fetch("http://127.0.0.1:5000/upload", {
+            method: "POST",
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => console.log("Server Response:", data))
+        .catch(error => console.error("Error uploading image:", error));
+    }, "image/jpeg");
+});
+</script>
