@@ -2,12 +2,13 @@ import os
 import logging
 import base64
 import requests
+import time  # ✅ Import time module for unique filenames
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 
-# Load API Key from .env
+# Load OpenAI API Key from .env
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
@@ -20,14 +21,14 @@ CORS(app)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Store chat history per image
+# Dictionary to store chat history per image
 chat_histories = {}
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 def encode_image(image_path):
-    """Encodes image as base64 string"""
+    """Encodes an image as a base64 string."""
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
 
@@ -54,7 +55,7 @@ def get_image_explanation(image_data):
         response.raise_for_status()
         openai_response = response.json()
 
-        # Extract assistant's response
+        # Extract OpenAI's response
         explanation = openai_response["choices"][0]["message"]["content"]
         return explanation
 
@@ -72,9 +73,11 @@ def upload_file():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
 
-    # Save the uploaded file
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    # Generate a unique filename using timestamp
+    timestamp = str(int(time.time()))  # Current UNIX timestamp
+    extension = os.path.splitext(file.filename)[1]  # Get file extension (.png, .jpg, etc.)
+    new_filename = f"image_{timestamp}{extension}"  # Create new filename (e.g., image_1700001234.png)
+    filepath = os.path.join(UPLOAD_FOLDER, new_filename)
     file.save(filepath)
 
     # Encode the image
@@ -86,8 +89,10 @@ def upload_file():
     if explanation is None:
         return jsonify({"error": "Failed to get explanation from OpenAI"}), 500
 
+    # Use new_filename (without extension) as image_id
+    image_id = os.path.splitext(new_filename)[0]  # e.g., "image_1700001234"
+
     # Store chat history for this image
-    image_id = filename.split('.')[0]  # Unique ID for image
     chat_histories[image_id] = [
         {"role": "system", "content": "You are a helpful AI that assists with questions based on an image and its explanation."},
         {"role": "assistant", "content": explanation}  # Explanation as initial context
@@ -95,14 +100,14 @@ def upload_file():
 
     logging.info(f"✅ Chat History Initialized for {image_id}: {chat_histories[image_id]}")
 
-    return jsonify({"image_id": image_id, "explanation": explanation})
+    return jsonify({"image_id": image_id, "explanation": explanation})  # ✅ Returning plain text explanation
 
 def chat_with_openai(image_id, user_message):
-    """Sends user messages to OpenAI with context from explanation."""
+    """Sends user messages to OpenAI along with full conversation history."""
     if image_id not in chat_histories:
         return {"error": "No chat history found for this image."}
 
-    # Add user message to history
+    # Append user message to history
     chat_histories[image_id].append({"role": "user", "content": user_message})
 
     openai_api_url = "https://api.openai.com/v1/chat/completions"
@@ -114,16 +119,16 @@ def chat_with_openai(image_id, user_message):
         response.raise_for_status()
         openai_response = response.json()
 
-        # Extract assistant's response
+        # Extract OpenAI's response
         assistant_message = openai_response["choices"][0]["message"]["content"]
 
-        # Store response in history
+        # Append assistant's response to chat history
         chat_histories[image_id].append({"role": "assistant", "content": assistant_message})
 
         # ✅ Log the updated chat history
         logging.info(f"📝 Updated Chat History for {image_id}: {chat_histories[image_id]}")
 
-        return {"response": assistant_message}
+        return {"response": assistant_message}  # ✅ Returning plain text response
 
     except requests.exceptions.RequestException as e:
         logging.error(f"Error calling OpenAI: {e}")
