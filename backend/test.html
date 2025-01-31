@@ -1,41 +1,53 @@
-<video id="video" autoplay></video>
-<button id="capture">Capture</button>
-<canvas id="canvas" style="display:none;"></canvas>
+<input type="file" id="imageInput">
+<button onclick="uploadImage()">Upload Image</button>
+<p id="explanation"></p>
+
+<input type="text" id="chatInput" placeholder="Ask a question...">
+<button onclick="sendMessage()">Send</button>
+<p id="chatResponse"></p>
 
 <script>
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
-const captureButton = document.getElementById("capture");
+let currentImageId = "";
 
-// Access webcam
-navigator.mediaDevices.getUserMedia({ video: true })
-    .then((stream) => {
-        video.srcObject = stream;
-    })
-    .catch((err) => {
-        console.error("Error accessing webcam:", err);
+async function uploadImage() {
+    const input = document.getElementById("imageInput");
+    if (!input.files.length) {
+        alert("Please select an image!");
+        return;
+    }
+
+    let formData = new FormData();
+    formData.append("image", input.files[0]);
+
+    const response = await fetch("http://127.0.0.1:5000/upload", {
+        method: "POST",
+        body: formData,
     });
 
-// Capture image from video
-captureButton.addEventListener("click", () => {
-    const context = canvas.getContext("2d");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const result = await response.json();
+    console.log("Image Explanation:", result);
 
-    // Convert canvas to Blob
-    canvas.toBlob((blob) => {
-        let formData = new FormData();
-        formData.append("image", blob, "captured_image.jpg");
+    document.getElementById("explanation").innerText = result.explanation;
+    currentImageId = result.image_id;
+}
 
-        // Send image to Flask backend
-        fetch("http://127.0.0.1:5000/upload", {
-            method: "POST",
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => console.log("Server Response:", data))
-        .catch(error => console.error("Error uploading image:", error));
-    }, "image/jpeg");
-});
+async function sendMessage() {
+    const message = document.getElementById("chatInput").value;
+
+    if (!currentImageId) {
+        alert("Upload an image first!");
+        return;
+    }
+
+    const response = await fetch("http://127.0.0.1:5000/chat", {
+        method: "POST",
+        body: JSON.stringify({ image_id: currentImageId, message }),
+        headers: { "Content-Type": "application/json" }
+    });
+
+    const result = await response.json();
+    console.log("Chat Response:", result);
+
+    document.getElementById("chatResponse").innerText = result.response;
+}
 </script>
