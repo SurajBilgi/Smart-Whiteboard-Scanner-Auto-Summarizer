@@ -35,6 +35,7 @@ export function Chat({
 }: ChatProps) {
   const [inputValue, setInputValue] = useState("");
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [thinking, setThinking] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const scrollViewportRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
@@ -66,6 +67,11 @@ export function Chat({
   useEffect(() => {
     if (messages.length > 0) {
       scrollToBottom();
+
+      // Stop the thinking animation if a new assistant message arrives
+      if (messages[messages.length - 1].sender === "assistant") {
+        setThinking(false);
+      }
     }
   }, [messages]);
 
@@ -80,6 +86,7 @@ export function Chat({
 
       setMessages([newMessage]);
       setInputValue("");
+      setThinking(true);
     }
   }, [inputValue, isEnabled]);
 
@@ -103,88 +110,70 @@ export function Chat({
         )}
         {messages.length > 0 && (
           <ScrollArea ref={scrollAreaRef}>
-            <div ref={scrollViewportRef}>
-              {imagePreview}
-              {messages.length > 0 && !isAnalyzing && (
-                <>
-                  {messages.map((message, index) => (
+            {/* <div ref={scrollViewportRef}> */}
+            {imagePreview}
+            {messages.length > 0 && !isAnalyzing && (
+              <>
+                {messages.map((message, index) => (
+                  <Box
+                    key={message.id}
+                    mb="3"
+                    ref={
+                      index === messages.length - 1 ? lastMessageRef : undefined
+                    }
+                    style={{
+                      display: "flex",
+                      justifyContent:
+                        message.sender === "user" ? "flex-end" : "flex-start",
+                    }}
+                  >
                     <Box
-                      key={message.id}
-                      mb="3"
-                      ref={
-                        index === messages.length - 1
-                          ? lastMessageRef
-                          : undefined
+                      className={
+                        message.sender === "user"
+                          ? "chat-user"
+                          : "chat-assistant"
                       }
                       style={{
-                        display: "flex",
-                        justifyContent:
-                          message.sender === "user" ? "flex-end" : "flex-start",
+                        backgroundColor:
+                          message.sender === "user"
+                            ? "var(--accent-9)"
+                            : "var(--gray-3)",
+                        color:
+                          message.sender === "user"
+                            ? "white !important"
+                            : "var(--gray-12)",
+                        padding: "8px 12px",
+                        borderRadius: "12px",
+                        borderBottomRightRadius:
+                          message.sender === "user" ? "4px" : "12px",
+                        borderBottomLeftRadius:
+                          message.sender === "assistant" ? "4px" : "12px",
                       }}
                     >
-                      <Box
-                        className={
-                          message.sender === "user"
-                            ? "chat-user"
-                            : "chat-assistant"
-                        }
+                      <MarkdownWithMath>{message.text}</MarkdownWithMath>
+                      <Text
+                        size="1"
+                        color={message.sender === "user" ? undefined : "gray"}
                         style={{
-                          backgroundColor:
-                            message.sender === "user"
-                              ? "var(--accent-9)"
-                              : "var(--gray-3)",
+                          opacity: 0.7,
                           color:
-                            message.sender === "user"
-                              ? "white !important"
-                              : "var(--gray-12)",
-                          padding: "8px 12px",
-                          borderRadius: "12px",
-                          borderBottomRightRadius:
-                            message.sender === "user" ? "4px" : "12px",
-                          borderBottomLeftRadius:
-                            message.sender === "assistant" ? "4px" : "12px",
+                            message.sender === "user" ? "white" : undefined,
                         }}
                       >
-                        <MarkdownWithMath>{message.text}</MarkdownWithMath>
-                        <Text
-                          size="1"
-                          color={message.sender === "user" ? undefined : "gray"}
-                          style={{
-                            opacity: 0.7,
-                            color:
-                              message.sender === "user" ? "white" : undefined,
-                          }}
-                        >
-                          {message.timestamp.toLocaleTimeString()}
-                        </Text>
-                      </Box>
+                        {message.timestamp.toLocaleTimeString()}
+                      </Text>
                     </Box>
-                  ))}
-                </>
-              )}
-            </div>
+                  </Box>
+                ))}
+              </>
+            )}
+            {thinking && (
+              <div className="py-4 text-gray-600 transition-all duration-300 ease-in-out animate-fade-in">
+                <p className="text-base animate-pulse">Thinking...</p>
+              </div>
+            )}
+            {/* </div> */}
           </ScrollArea>
-        )}
-        {showScrollButton && (
-          <Button
-            onClick={scrollToBottom}
-            size="2"
-            variant="solid"
-            style={{
-              position: "absolute",
-              bottom: "20px",
-              right: "20px",
-              borderRadius: "full",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-              zIndex: 10,
-            }}
-          >
-            <ArrowDown size={16} />
-            New message
-          </Button>
         )}
       </Box>
 
